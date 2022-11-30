@@ -1,23 +1,41 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-g = 9.81
+### constants ###
+pluto_mass = 1.309 * 10**22 #kg
+G = 6.67 * 10 **-11
+g0 = 9.81
 
 
+### orbit equations ###
+def vis_viva(M, r, a):
+    return np.sqrt(G * M * (2 / r - 1 / a))
+
+def vcirc(M, r):
+    return np.sqrt(G * M / r)
+
+def ecc(ra, rb):
+    return (ra-rb) / (ra+rb)
+
+def semimajor(ra, rb):
+    return (ra + rb) / 2
+
+
+### spacecraft equations ###
 def massfrac(dv, isp):
-    return np.exp(dv/(g * isp))
+    return np.exp(dv / (g0 * isp)) #returns total mass / (total mass - fuel)
 
 def massrate(F, isp):
-    return F / (isp * g)
+    return F / (g0 * isp)
 
 #current values for MPD assume a 1MW reactor
 #VASMR can go from 1500 - 10000 s isp, but thrust level is not listed for all values
 #sc weight does not include tank drymass
 
 sc_weight = 500
+drymass = 1.1 #10%
 th_weight = [100, 250, 2200, 50, 2600, 2600]
-isp = [300, 450, 950, 4200, 5000, 1000]
+isp = [320, 470, 950, 4200, 5000, 1000]
 thrust = [44000, 66000, 80000, 0.25, 20, 100]
 label = ['HyperGolic', 'LH2', 'NTR-LH2', 'ION', 'MPD', 'MPD m2']
 lstyle = ['-', '-', '-', '-', '-', '--']
@@ -27,7 +45,7 @@ delta_v = np.arange(5000, 15000, 1)
 
 ### log plot dv vs mass###
 for i in range(len(isp)):
-    plt.plot(delta_v, np.log10((massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i])) / 1000), label = label[i], linestyle=lstyle[i])
+    plt.plot(delta_v, np.log10((massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i]) * drymass) / 1000), label = label[i], linestyle=lstyle[i])
     
 plt.legend()
 plt.ylabel('Mass log$_{10}(t)$')
@@ -36,7 +54,7 @@ plt.show()
 
 ### normal plot dv vs mass###
 for i in range(len(isp)):
-    plt.plot(delta_v, (massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i])) / 1000, label = label[i], linestyle=lstyle[i])
+    plt.plot(delta_v, (massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i]) * drymass) / 1000, label = label[i], linestyle=lstyle[i])
     
 plt.legend()
 plt.ylabel('Mass (t)')
@@ -46,7 +64,7 @@ plt.show()
 
 ### log plot burn time vs deltav ###
 for i in range(len(isp)):
-    plt.plot(delta_v, np.log10((massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i])) / massrate(thrust[i], isp[i])), label = label[i], linestyle=lstyle[i])
+    plt.plot(delta_v, np.log10(drymass * (massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i]) - (sc_weight + th_weight[i])) / massrate(thrust[i], isp[i])), label = label[i], linestyle=lstyle[i])
 
 plt.legend()
 plt.ylabel('Burn time log$_{10}(s)$')
@@ -55,7 +73,7 @@ plt.show()
 
 ### normal plot burn time vs deltav ###
 for i in range(len(isp)):
-    plt.plot(delta_v, (massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i])) / massrate(thrust[i], isp[i]), label = label[i], linestyle=lstyle[i])
+    plt.plot(delta_v, drymass * (massfrac(delta_v, isp[i]) * (sc_weight + th_weight[i]) - (sc_weight + th_weight[i])) / massrate(thrust[i], isp[i]), label = label[i], linestyle=lstyle[i])
     
 plt.legend()
 plt.ylabel('Burn time (s)')
