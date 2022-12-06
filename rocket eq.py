@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 pluto_mass = 1.309 * 10**22 #kg
 pluto_radius = 1188300      #m
 G = 6.67 * 10 **-11
-g0 = 9.81
+g0 = 9.80665
 
 
 ### orbit equations ###
@@ -17,6 +17,9 @@ def vis_viva(M, r, a):
 
 def vcirc(M, r):
     return np.sqrt(G * M / r)
+
+def vescape(M, r):
+    return np.sqrt(2 * G * M / r)
 
 def ecc(ra, rb):
     return (ra-rb) / (ra+rb)
@@ -49,21 +52,21 @@ def plot(x, y):
     plt.plot(x, y, label=label[i], linestyle=lstyle[i], color = color[i])
     
 #current values for MPD assume a 1MW reactor
-#VASMR can go from 1500 - 10000 s isp, but thrust level is not listed for all values
+#VASMR can go from 1000 - 10000 s isp, but thrust level is not listed for all values
 #sc weight does not include tank drymass
-#NTO --> NTO + UDMH + Hydrazine (NTO + Aerozine 50)
+#NTO --> NTO + Aerozine 50
 #Ion is NASA's NEXT thruster, using Xenon
 
-sc_weight = 0.5                                                     #ton
+sc_weight = 0.4                                                     #ton
 drymass_fraction = 0.1                                             #10%
 th_weight = [0.2, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
 isp = [320, 470, 950, 4200, 5000, 1000]                             #s
-thrust = [88000, 66000, 80000, 0.25, 20, 100]                       #N
+thrust = [88000, 66000, 80000, 0.25, 30, 150]                       #N
 label = ['NTO-50', 'LH2', 'NTR-LH2', 'Ion', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
 lstyle = ['-', '-', '-', '-', '-', '--']
 color = ['blue', 'orange', 'green', 'red', 'purple', 'purple']
 
-delta_v = np.arange(5000, 15000, 1)
+delta_v = np.arange(3000, 15000, 1)
 
 ### log plot dv vs mass###
 for i in range(len(isp)):
