@@ -44,8 +44,7 @@ def craftmass(dv, isp, thrust_w):
 
 def totalmass(dv, isp, thrust_w):
     ratio = massfrac(dv, isp)
-    return (drymass_fraction + 1) * ((ratio - 1) / (1 + (1 - ratio) * drymass_fraction + 1)) * (sc_weight + thrust_w)
-
+    return ((drymass_fraction + 1) * (ratio - 1) / (1 + (1 - ratio) * drymass_fraction) + 1) * (sc_weight + thrust_w)
 
 
 def plot(x, y):
