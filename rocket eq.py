@@ -47,6 +47,7 @@ def totalmass(dv, isp, thrust_w):
     return ((drymass_fraction + 1) * (ratio - 1) / (1 + (1 - ratio) * drymass_fraction) + 1) * (sc_weight + thrust_w)
 
 
+
 def plot(x, y):
     plt.plot(x, y, label=label[i], linestyle=lstyle[i], color = color[i])
     
@@ -78,55 +79,19 @@ plt.title('Logarithmic plot of mass vs delta-v')
 plt.show()
 
 ### normal plot dv vs mass###
+limit = 100
 for i in range(len(isp)):
-    plot(delta_v, totalmass(delta_v, isp[i], th_weight[i]))
+    if i < 2:
+        y = totalmass(delta_v, isp[i], th_weight[i])
+        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
+    else:
+        plot(delta_v, totalmass(delta_v, isp[i], th_weight[i]))
     
 plt.legend()
 plt.ylabel('Mass (t)')
 plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Plot of mass vs delta-v')
 plt.show()
-
-
-### log plot dv vs tank mass###
-# for i in range(len(isp)):
-#     plot(delta_v, np.log10(completemass(delta_v, isp[i], i) - totalmass(delta_v, isp[i], i)))
-        
-# plt.legend()
-# plt.ylabel('Tank mass log$_{10}$(t)')
-# plt.xlabel('delta-v (ms$^{-1}$)')
-# plt.title('Logarithmic plot of tank-mass vs delta-v')
-# plt.show()
-
-# ### normal plot dv vs tank mass###
-# for i in range(len(isp)):
-#     plot(delta_v, completemass(delta_v, isp[i], i) - totalmass(delta_v, isp[i], i))
-    
-# plt.legend()
-# plt.ylabel('Tank mass (t)')
-# plt.xlabel('delta-v (ms$^{-1}$)')
-# plt.title('Plot of tank-mass vs delta-v')
-# plt.show()
-
-### log plot dv vs tank mass###
-# for i in range(len(isp)):
-#     plot(delta_v, np.log10(fuelmass(delta_v, isp[i], i)))
-        
-# plt.legend()
-# plt.ylabel('Fuel mass log$_{10}$(t)')
-# plt.xlabel('delta-v (ms$^{-1}$)')
-# plt.title('Logarithmic plot of fuel-mass vs delta-v')
-# plt.show()
-
-# ### normal plot dv vs tank mass###
-# for i in range(len(isp)):
-#     plot(delta_v, fuelmass(delta_v, isp[i], i))
-    
-# plt.legend()
-# plt.ylabel('Fuel mass (t)')
-# plt.xlabel('delta-v (ms$^{-1}$)')
-# plt.title('Plot of fuel-mass vs delta-v')
-# plt.show()
 
 
 ### log plot burn time vs deltav ###
@@ -140,8 +105,13 @@ plt.title('Logarithmic plot of burn time vs delta-v')
 plt.show() 
 
 ### normal plot burn time vs deltav ###
+limit = 10**4
 for i in range(len(isp)):
-    plot(delta_v, fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i]))
+    if i < 2:
+        y = fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i])
+        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
+    else:
+        plot(delta_v, fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i]))
     
 plt.legend()
 plt.ylabel('Burn time (s)')
