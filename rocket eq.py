@@ -118,3 +118,19 @@ plt.ylabel('Burn time (s)')
 plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Plot of burn time vs delta-v')
 plt.show() 
+
+
+### plot dv vs dv per mass###
+limit = 0.0035
+for i in range(len(isp)):
+    if i < 2:
+        y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
+        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
+    else:
+        plot(delta_v, totalmass(delta_v, isp[i], th_weight[i]) / delta_v)
+plt.legend()
+plt.ylabel('delta-v / mass (ms$^{-1}$ t$^{-1}$)')
+plt.xlabel('delta-v (ms$^{-1}$)')
+plt.title('Plot of mass / delta-v vs delta-v')
+plt.show()
+
