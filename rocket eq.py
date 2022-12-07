@@ -50,6 +50,12 @@ def totalmass(dv, isp, thrust_w):
 
 def plot(x, y):
     plt.plot(x, y, label=label[i], linestyle=lstyle[i], color = color[i])
+
+def limitfx(valx, valy, lim, i, i_lim):
+    if i < i_lim:
+        return valx[:np.where(valy > lim)[0][0]], valy[:np.where(valy > lim)[0][0]]
+    else:
+        return valx, valy
     
 #current values for MPD assume a 1MW reactor
 #VASMR can go from 1000 - 10000 s isp, but thrust level is not listed for all values
@@ -78,14 +84,11 @@ plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Logarithmic plot of mass vs delta-v')
 plt.show()
 
+
 ### normal plot dv vs mass###
-limit = 100
 for i in range(len(isp)):
-    if i < 2:
-        y = totalmass(delta_v, isp[i], th_weight[i])
-        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
-    else:
-        plot(delta_v, totalmass(delta_v, isp[i], th_weight[i]))
+    y = totalmass(delta_v, isp[i], th_weight[i])
+    plot(*limitfx(delta_v, y, 100, i, 2))
     
 plt.legend()
 plt.ylabel('Mass (t)')
@@ -105,13 +108,9 @@ plt.title('Logarithmic plot of burn time vs delta-v')
 plt.show() 
 
 ### normal plot burn time vs deltav ###
-limit = 10**4
 for i in range(len(isp)):
-    if i < 2:
-        y = fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i])
-        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
-    else:
-        plot(delta_v, fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i]))
+    y = fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i])
+    plot(*limitfx(delta_v, y, 10**4, i, 2))
     
 plt.legend()
 plt.ylabel('Burn time (s)')
@@ -121,13 +120,10 @@ plt.show()
 
 
 ### plot dv vs dv per mass###
-limit = 0.0035
 for i in range(len(isp)):
-    if i < 2:
-        y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
-        plot(delta_v[:np.where(y > limit)[0][0]], y[:np.where(y > limit)[0][0]])
-    else:
-        plot(delta_v, totalmass(delta_v, isp[i], th_weight[i]) / delta_v)
+    y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
+    plot(*limitfx(delta_v, y, 0.0035, i, 2))
+    
 plt.legend()
 plt.ylabel('delta-v / mass (ms$^{-1}$ t$^{-1}$)')
 plt.xlabel('delta-v (ms$^{-1}$)')
