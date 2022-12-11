@@ -51,9 +51,10 @@ def totalmass(dv, isp, thrust_w):
 def plot(x, y):
     plt.plot(x, y, label=label[i], linestyle=lstyle[i], color = color[i])
 
-def limitfx(valx, valy, lim, i, i_lim):
-    if i < i_lim:
-        return valx[:np.where(valy > lim)[0][0]], valy[:np.where(valy > lim)[0][0]]
+def limitfx(valx, valy, lim = np.inf, limb = -np.inf):
+    condition = np.where((valy > lim) | (valy < limb))[0]
+    if len(condition) > 0:
+        return valx[:condition[0]], valy[:condition[0]]
     else:
         return valx, valy
     
@@ -63,21 +64,30 @@ def limitfx(valx, valy, lim, i, i_lim):
 #NTO --> NTO + Aerozine 50
 #Ion is NASA's NEXT thruster, using Xenon
 
-sc_weight = 0.4                                                     #ton
-drymass_fraction = 0.1                                              #10%
-th_weight = [0.2, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
-isp = [320, 470, 950, 4200, 5000, 1000]                             #s
-thrust = [88000, 66000, 80000, 0.25, 6, 30]                         #N
-label = ['NTO-50', 'LH2', 'NTR-LH2', 'Ion', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
+sc_weight = 0.4                                                      #ton
+drymass_fraction = 0.1                                               #10%
+
+### chemical -- nuclear -- ion -- mpd ###
+#th_weight = [0.2, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
+#isp = [320, 470, 950, 4170, 5000, 1000]                             #s
+#thrust = [88000, 66000, 80000, 0.25, 6, 30]                         #N
+#label = ['NTO-50', 'LH2', 'NTR-LH2', 'Ion', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
+
+### ion -- mpd ###
+th_weight = [0.05, 0.25, 0.4, 0.5, 2.6, 2.6]                         #ton
+isp = [4170, 9600, 2900, 20000, 5000, 1000]                          #s
+thrust = [0.25, 0.7, 2.3, 2.5, 6, 30]                                #N   
+label = ['NEXT', 'HiPEP', 'AEPS', 'DS4G', 'MPD$^{[1]}$', 'MPD$^{[2]}$']
+
+
 lstyle = ['-', '-', '-', '-', '-', '--']
 color = ['blue', 'orange', 'green', 'red', 'purple', 'purple']
 
-delta_v = np.arange(3000, 15000, 1)
+delta_v = np.arange(5000, 15000, 1)
 
 ### log plot dv vs mass###
 for i in range(len(isp)):
-    plot(delta_v, np.log10(totalmass(delta_v, isp[i], th_weight[i])))
-        
+    plot(delta_v, np.log10(totalmass(delta_v, isp[i], th_weight[i])))        
 plt.legend()
 plt.ylabel('Mass log$_{10}$(t)')
 plt.xlabel('delta-v (ms$^{-1}$)')
@@ -88,8 +98,7 @@ plt.show()
 ### normal plot dv vs mass###
 for i in range(len(isp)):
     y = totalmass(delta_v, isp[i], th_weight[i])
-    plot(*limitfx(delta_v, y, 100, i, 2))
-    
+    plot(*limitfx(delta_v, y, 100))    
 plt.legend()
 plt.ylabel('Mass (t)')
 plt.xlabel('delta-v (ms$^{-1}$)')
@@ -100,18 +109,17 @@ plt.show()
 ### log plot burn time vs deltav ###
 for i in range(len(isp)):
     plot(delta_v, np.log10(fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i])))
-
 plt.legend()
 plt.ylabel('Burn time log$_{10}$(s)')
 plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Logarithmic plot of burn time vs delta-v')
 plt.show() 
 
+
 ### normal plot burn time vs deltav ###
 for i in range(len(isp)):
     y = fuelmass(delta_v, isp[i], th_weight[i]) / massrate(thrust[i], isp[i])
-    plot(*limitfx(delta_v, y, 10**4, i, 2))
-    
+    plot(*limitfx(delta_v, y, 10**8, 0))    
 plt.legend()
 plt.ylabel('Burn time (s)')
 plt.xlabel('delta-v (ms$^{-1}$)')
@@ -122,8 +130,7 @@ plt.show()
 ### plot dv vs mass per dv###
 for i in range(len(isp)):
     y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
-    plot(*limitfx(delta_v, y, 0.0035, i, 2))
-    
+    plot(*limitfx(delta_v, y, 0.0035))    
 plt.legend()
 plt.ylabel('mass / delta-v (t (ms$^{-1}$)$^{-1}$)')
 plt.xlabel('delta-v (ms$^{-1}$)')
