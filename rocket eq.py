@@ -57,17 +57,17 @@ def limitfx(valx, valy, lim, i, i_lim):
     else:
         return valx, valy
     
-#current values for MPD assume a 1MW reactor
+#current values for MPD assume a 200kW reactor
 #VASMR can go from 1000 - 10000 s isp, but thrust level is not listed for all values
 #sc weight does not include tank drymass
 #NTO --> NTO + Aerozine 50
 #Ion is NASA's NEXT thruster, using Xenon
 
 sc_weight = 0.4                                                     #ton
-drymass_fraction = 0.1                                             #10%
+drymass_fraction = 0.1                                              #10%
 th_weight = [0.2, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
 isp = [320, 470, 950, 4200, 5000, 1000]                             #s
-thrust = [88000, 66000, 80000, 0.25, 30, 150]                       #N
+thrust = [88000, 66000, 80000, 0.25, 6, 30]                         #N
 label = ['NTO-50', 'LH2', 'NTR-LH2', 'Ion', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
 lstyle = ['-', '-', '-', '-', '-', '--']
 color = ['blue', 'orange', 'green', 'red', 'purple', 'purple']
@@ -119,14 +119,13 @@ plt.title('Plot of burn time vs delta-v')
 plt.show() 
 
 
-### plot dv vs dv per mass###
+### plot dv vs mass per dv###
 for i in range(len(isp)):
     y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
     plot(*limitfx(delta_v, y, 0.0035, i, 2))
     
 plt.legend()
-plt.ylabel('delta-v / mass (ms$^{-1}$ t$^{-1}$)')
+plt.ylabel('mass / delta-v (t (ms$^{-1}$)$^{-1}$)')
 plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Plot of mass / delta-v vs delta-v')
 plt.show()
-
