@@ -62,21 +62,21 @@ def limitfx(valx, valy, lim = np.inf, limb = -np.inf):
 #VASMR can go from 1000 - 10000 s isp, but thrust level is not listed for all values
 #sc weight does not include tank drymass
 #NTO --> NTO + Aerozine 50
-#Ion is NASA's NEXT thruster, using Xenon
 
 sc_weight = 0.4                                                      #ton
 drymass_fraction = 0.1                                               #10%
+engines = np.array([8, 5, 4, 1, 1, 1])                               #nr of engines
 
 ### chemical -- nuclear -- ion -- mpd ###
-#th_weight = [0.2, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
+#th_weight = [0.1, 0.25, 2.2, 0.05, 2.6, 2.6]                        #ton
 #isp = [320, 470, 950, 4170, 5000, 1000]                             #s
-#thrust = [88000, 66000, 80000, 0.25, 6, 30]                         #N
-#label = ['NTO-50', 'LH2', 'NTR-LH2', 'Ion', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
+#thrust = [44000, 66000, 80000, 0.25, 6, 30]                         #N
+#label = ['AJ10', 'RL10', 'BNTR', 'NEXT', 'MPD$^{[1]}$', 'MPD$^{[2]}$'] 
 
 ### ion -- mpd ###
-th_weight = [0.05, 0.25, 0.4, 0.5, 2.6, 2.6]                         #ton
+th_weight = [0.05, 0.25, 0.4, 0.5, 2.6, 2.6] * engines               #ton
 isp = [4170, 9600, 2900, 20000, 5000, 1000]                          #s
-thrust = [0.25, 0.7, 2.3, 2.5, 6, 30]                                #N   
+thrust = [0.25, 0.7, 2.3, 2.5, 6, 30] * engines                      #N   
 label = ['NEXT', 'HiPEP', 'AEPS', 'DS4G', 'MPD$^{[1]}$', 'MPD$^{[2]}$']
 
 
@@ -130,7 +130,7 @@ plt.show()
 ### plot dv vs mass per dv###
 for i in range(len(isp)):
     y = totalmass(delta_v, isp[i], th_weight[i]) / delta_v
-    plot(*limitfx(delta_v, y, 0.0035))    
+    plot(*limitfx(delta_v, y))    
 plt.legend()
 plt.ylabel('mass / delta-v (t (ms$^{-1}$)$^{-1}$)')
 plt.xlabel('delta-v (ms$^{-1}$)')
