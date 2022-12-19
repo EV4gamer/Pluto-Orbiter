@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
-
+from copy import deepcopy
 
 ### constants ###
 pluto_mass = 1.309 * 10**22 #kg
@@ -50,7 +50,7 @@ def burntime(dv, engine): #burntime in days
     if engine.label == 'AJ10' or engine.label == 'RL10':
         return nstage(engine, dv) / engine.massrate() / (24 * 3600)
     else:
-        return fuelmass(dv, engine.isp, engine.mass()) / engine.massrate() / (24 * 3600)
+        return engine.burntime() / (24 * 3600)
 
 def nucweight(PWe, factor=1):
     if PWe == 0:
@@ -91,15 +91,19 @@ def nstage(engine, dv):
                 v += [fuelmass(index, engine.isp, engine.mass())] 
     return np.array(v)
 
-
+sc_weight = 0.4                                                      #ton
+drymass_fraction = 0.1                                               #10%
+delta_v = np.arange(5000, 17000, 1)
+    
 class engine:
-    def __init__(self, weight, isp, thrust, power, engines, label):
+    def __init__(self, weight, isp, thrust, power, engines, label, tf=drymass_fraction):
         self.weight = weight
         self.isp = isp
         self.thrust = thrust
         self.power = power
         self.label = label
         self.engines = engines
+        self.drymass_fraction = tf
         
     def mass(self): #engines + s/c mass + nuc
         return self.weight * self.engines + sc_weight + nucweight(self.power * self.engines, 2)
@@ -109,36 +113,38 @@ class engine:
     
     def fuelmass(self, dv):
         ratio = massfrac(dv, self.isp)
-        return ((ratio - 1) / (1 + (1 - ratio) * drymass_fraction)) * self.mass()   
-        
+        return ((ratio - 1) / (1 + (1 - ratio) * self.drymass_fraction)) * self.mass()   
+    
+    def totalmass(self, dv):
+        return (1 + self.drymass_fraction) * self.fuelmass(dv) + self.mass()
+    
     def burntime(self, dv):
-        return fuelmass(dv, self.isp, self.mass()) / self.massrate()
+        return self.fuelmass(dv) / self.massrate()
+    
 
 engine_list = [
-   #engine(weight,  isp,    thrust, power,  engines, label) 
-   #engine(0.1,     320,    44000,  0,      1,  'AJ10'),
-   #engine(0.25,    470,    66000,  0,      1,  'RL10'),
-   #engine(2.2,     950,    80000,  0,      1,  'BNTR'),
-    engine(0.05,    4170,   0.237,  7,      8,  'NEXT'),
-    engine(0.25,    9620,   0.67,   39.3,   4,  'HiPEP'),
-    engine(0.4,     2900,   1.7,    50,     2,  'AEPS'),
-    engine(0.5,     19300,  2.5,    250,    1,  'DS4G'),
-    engine(0.23,    2650,   5.4,    100,    1,  'X3'),
-    engine(0.68,    5000,   6,      200,    1,  'MPD$_{Ar}$'),
-    engine(0.68,    2500,   11,     200,    1,  'MPD$_{Kr}$'),
-   #engine(2.8,     10141,  20.1,   0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
+   #engine(weight,  isp,    thrust, power,  engines, label,     tf) 
+   #engine(0.1,     320,    44000,  0,      1,  'AJ10',         0,10),
+   #engine(0.25,    470,    66000,  0,      1,  'RL10',         0.10),
+   #engine(2.2,     950,    80000,  0,      1,  'BNTR',         0.10),
+    engine(0.05,    4170,   0.237,  7,      8,  'NEXT',         0.09),
+    engine(0.25,    9620,   0.67,   39.3,   4,  'HiPEP',        0.09),
+    engine(0.4,     2900,   1.7,    50,     2,  'AEPS',         0.09),
+    engine(0.3,     19300,  2.5,    250,    1,  'DS4G',         0.09),
+    engine(0.23,    2650,   5.4,    100,    1,  'X3',           0.09),
+    engine(0.68,    5000,   6,      200,    1,  'MPD$_{Ar}$',   0.05),
+    engine(0.68,    2500,   11,     200,    1,  'MPD$_{Kr}$',   0.05),
+    engine(2.8,     10141,  20.1,   0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
     ]
 
-sc_weight = 0.4                                                      #ton
-drymass_fraction = 0.1                                               #10%
-delta_v = np.arange(5000, 17000, 1)
+
 
 ### log plot dv vs mass###
 for engine in engine_list:
     if(engine.label == 'AJ10' or engine.label == 'RL10'):
-        plot(delta_v, nstage(engine, delta_v) * (1 + drymass_fraction) + engine.mass())
+        plot(delta_v, nstage(engine, delta_v) * (1 + engine.drymass_fraction) + engine.mass())
     else:
-        plot(delta_v, totalmass(delta_v, engine.isp, engine.mass()))  
+        plot(delta_v, engine.totalmass(delta_v))  
 plt.grid()
 plt.tight_layout()
 plt.legend()
@@ -153,7 +159,7 @@ for engine in engine_list:
     if(engine.label == 'AJ10' or engine.label == 'RL10'):
         plot(delta_v, nstage(engine, delta_v) / engine.massrate())
     else:
-        plot(delta_v, fuelmass(delta_v, engine.isp, engine.mass()) / engine.massrate())
+        plot(delta_v, engine.burntime(delta_v))
 plt.grid()
 plt.tight_layout()
 plt.legend()
@@ -169,7 +175,7 @@ plt.show()
 #     if(engine.label == 'AJ10' or engine.label == 'RL10'):
 #         y = (nstage(engine, delta_v) + engine.mass()) / delta_v
 #     else:
-#         y = totalmass(delta_v, engine.isp, engine.mass()) / delta_v        
+#         y = engine.totalmass(delta_v) / delta_v        
 #     plot(*limitfx(delta_v, y, .01, 0))    
 # plt.grid()
 # plt.tight_layout()
@@ -179,14 +185,13 @@ plt.show()
 # plt.title('Plot of mass / delta-v vs delta-v')
 # plt.show()
 
-engine_list2 = engine_list
-for engine in engine_list2:
+for engine in deepcopy(engine_list): #copy by value, not reference
     burn = []
     tmass = []
     for i in range(1, 9):
         engine.engines = i
         burn += [engine.burntime(15000) / (24 * 3600)]
-        tmass += [(1 + drymass_fraction) * engine.fuelmass(15000) + engine.mass()]
+        tmass += [(1 + engine.drymass_fraction) * engine.fuelmass(15000) + engine.mass()]
         if(tmass[-1] < 15) and (burn[-1] < 600):
             plt.annotate(str(i), (tmass[-1], burn[-1]))
     plt.plot(tmass, burn, label=engine.label)
@@ -199,4 +204,3 @@ plt.xlabel('Total s/c mass (t)')
 plt.ylabel('Burntime (days)')
 plt.title("Total mass vs burntime per engine")
 plt.show()
-
