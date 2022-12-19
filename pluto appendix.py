@@ -28,6 +28,10 @@ def semimajor(ra, rb):
     return (ra + rb) / 2
 
 
+sc_weight = 0.4                                                      #ton
+drymass_fraction = 0.1                                               #10%
+delta_v = np.arange(5000, 17000, 1)
+
 ### spacecraft equations ###
 def massfrac(dv, isp):
     return np.exp(dv / (g0 * isp)) #returns total mass / (total mass - fuel)
@@ -35,16 +39,16 @@ def massfrac(dv, isp):
 def massrate(F, isp):
     return F / (g0 * isp * 1000) #tons / s
 
-def fuelmass(dv, isp, w):
+def fuelmass(dv, isp, w, df=drymass_fraction):
     ratio = massfrac(dv, isp)
-    return ((ratio - 1) / (1 + (1 - ratio) * drymass_fraction)) * w
+    return ((ratio - 1) / (1 + (1 - ratio) * df)) * w
 
-def craftmass(dv, isp, w):
-    return w + drymass_fraction * fuelmass(dv, isp, w)
+def craftmass(dv, isp, w, df=drymass_fraction):
+    return w + df * fuelmass(dv, isp, w)
 
-def totalmass(dv, isp, w):
+def totalmass(dv, isp, w, df=drymass_fraction):
     ratio = massfrac(dv, isp)
-    return ((drymass_fraction + 1) * (ratio - 1) / (1 + (1 - ratio) * drymass_fraction) + 1) * w
+    return ((df + 1) * (ratio - 1) / (1 + (1 - ratio) * df) + 1) * w
 
 def burntime(dv, engine): #burntime in days
     if engine.label == 'AJ10' or engine.label == 'RL10':
@@ -57,9 +61,10 @@ def nucweight(PWe, factor=1):
         return 0
     else:
         return (25.63 + PWe) / (0.0293 * 1000 * factor)
-
-def vasimr_weight(PWe):
-    return PWe * 1.2 + 444
+        #return PWe / 50
+        
+def vasimr_weight(PWe): #ton
+    return (PWe * 1.2 + 444) / 1000
 
 def plot(x, y):
     plt.plot(x, y, label=engine.label)
@@ -91,10 +96,7 @@ def nstage(engine, dv):
                 v += [fuelmass(index, engine.isp, engine.mass())] 
     return np.array(v)
 
-sc_weight = 0.4                                                      #ton
-drymass_fraction = 0.1                                               #10%
-delta_v = np.arange(5000, 17000, 1)
-    
+
 class engine:
     def __init__(self, weight, isp, thrust, power, engines, label, tf=drymass_fraction):
         self.weight = weight
@@ -132,42 +134,42 @@ engine_list = [
     engine(0.4,     2900,   1.7,    50,     2,  'AEPS',         0.09),
     engine(0.3,     19300,  2.5,    250,    1,  'DS4G',         0.09),
     engine(0.23,    2650,   5.4,    100,    1,  'X3',           0.09),
-    engine(0.68,    5000,   6,      200,    1,  'MPD$_{Ar}$',   0.05),
-    engine(0.68,    2500,   11,     200,    1,  'MPD$_{Kr}$',   0.05),
-    engine(2.8,     10141,  20.1,   0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
+   #engine(0.684,   5000,   6,      200,    1,  'MPD$_{Ar}$',   0.05),
+   #engine(0.684,   2500,   11,     200,    1,  'MPD$_{Kr}$',   0.05),
+   #engine(2.8,     10141,  20.1,   0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
     ]
 
 
 
 ### log plot dv vs mass###
-for engine in engine_list:
-    if(engine.label == 'AJ10' or engine.label == 'RL10'):
-        plot(delta_v, nstage(engine, delta_v) * (1 + engine.drymass_fraction) + engine.mass())
-    else:
-        plot(delta_v, engine.totalmass(delta_v))  
-plt.grid()
-plt.tight_layout()
-plt.legend()
-plt.gca().set_yscale('log')
-plt.ylabel('Mass (t)')
-plt.xlabel('delta-v (ms$^{-1}$)')
-plt.title('Logarithmic plot of mass vs delta-v')
-plt.show()
+# for engine in engine_list:
+#     if(engine.label == 'AJ10' or engine.label == 'RL10'):
+#         plot(delta_v, nstage(engine, delta_v) * (1 + engine.drymass_fraction) + engine.mass())
+#     else:
+#         plot(delta_v, engine.totalmass(delta_v))  
+# plt.grid()
+# plt.tight_layout()
+# plt.legend()
+# plt.gca().set_yscale('log')
+# plt.ylabel('Mass (t)')
+# plt.xlabel('delta-v (ms$^{-1}$)')
+# plt.title('Logarithmic plot of mass vs delta-v')
+# plt.show()
 
 ### log plot burn time vs deltav ###
-for engine in engine_list:
-    if(engine.label == 'AJ10' or engine.label == 'RL10'):
-        plot(delta_v, nstage(engine, delta_v) / engine.massrate())
-    else:
-        plot(delta_v, engine.burntime(delta_v))
-plt.grid()
-plt.tight_layout()
-plt.legend()
-plt.gca().set_yscale('log')
-plt.ylabel('Burn time (s)')
-plt.xlabel('delta-v (ms$^{-1}$)')
-plt.title('Logarithmic plot of burn time vs delta-v')
-plt.show() 
+# for engine in engine_list:
+#     if(engine.label == 'AJ10' or engine.label == 'RL10'):
+#         plot(delta_v, nstage(engine, delta_v) / engine.massrate())
+#     else:
+#         plot(delta_v, engine.burntime(delta_v))
+# plt.grid()
+# plt.tight_layout()
+# plt.legend()
+# plt.gca().set_yscale('log')
+# plt.ylabel('Burn time (s)')
+# plt.xlabel('delta-v (ms$^{-1}$)')
+# plt.title('Logarithmic plot of burn time vs delta-v')
+# plt.show() 
 
 
 ### plot dv vs mass per dv###
@@ -185,22 +187,45 @@ plt.show()
 # plt.title('Plot of mass / delta-v vs delta-v')
 # plt.show()
 
+xl = 11
+yl = 600
 for engine in deepcopy(engine_list): #copy by value, not reference
     burn = []
     tmass = []
     for i in range(1, 9):
         engine.engines = i
         burn += [engine.burntime(15000) / (24 * 3600)]
-        tmass += [(1 + engine.drymass_fraction) * engine.fuelmass(15000) + engine.mass()]
-        if(tmass[-1] < 15) and (burn[-1] < 600):
+        tmass += [engine.totalmass(15000)]
+        if(tmass[-1] < xl) and (burn[-1] < yl):
             plt.annotate(str(i), (tmass[-1], burn[-1]))
     plt.plot(tmass, burn, label=engine.label)
-    
-plt.legend()
+   
 plt.tight_layout()
-plt.ylim(0, 600)
-plt.xlim(0, 15)
 plt.xlabel('Total s/c mass (t)')
 plt.ylabel('Burntime (days)')
-plt.title("Total mass vs burntime per engine")
+plt.title("Total mass vs burntime per engine / kWe")
+
+
+tmass = []
+burn = []
+for p in np.arange(45, 200):
+    vmass = vasimr_weight(p)
+    nmass = nucweight(p, 2)
+    tmass += [totalmass(15000, 5000, vmass + sc_weight + nmass)]
+    burn += [fuelmass(15000, 5000, vmass + sc_weight + nmass, 0.05) / massrate(6 * p / 200, 5000) / (24 * 3600)]
+plt.plot(tmass, burn, label='MPD$_{Ar}$')
+
+tmass = []
+burn = []
+for p in np.arange(45, 200):
+    vmass = vasimr_weight(p)
+    nmass = nucweight(p, 2)
+    tmass += [totalmass(15000, 2500, vmass + sc_weight + nmass)]
+    burn += [fuelmass(15000, 2500, vmass + sc_weight + nmass, 0.05) / massrate(11 * p / 200, 2500) / (24 * 3600)]
+plt.plot(tmass, burn, label='MPD$_{Kr}$')
+
+plt.ylim(0, yl)
+plt.xlim(0, xl)
+plt.legend()
 plt.show()
+
