@@ -27,9 +27,15 @@ def ecc(ra, rb):
 def semimajor(ra, rb):
     return (ra + rb) / 2
 
+def rad_weight(area, factor=1):
+    #ISS rad: f=1
+    #C-C rad: f=5
+    return (12 * area) / (1000 * factor)
 
-sc_weight = 1.5                                                      #ton
-drymass_fraction = 0.1                                               #10%
+
+
+sc_weight = 0.7                     #ton, includes (science) payload + radiators + structure
+drymass_fraction = 0.1              #10%
 delta_v = np.arange(5000, 17000, 1)
 
 ### spacecraft equations ###
@@ -141,17 +147,17 @@ class engine:
     
 engine_list = [
     #engine(weight, isp,    thrust, power,  engines, label,     tf) 
-    engine(0.1,                         320,    44000,      0,      1,  'AJ10',         0.10),
-    engine(0.25,                        470,    66000,      0,      1,  'RL10',         0.10),
-    engine(2.2,                         950,    80000,      0,      1,  'BNTR',         0.10),
-    engine(0.05,                        4170,   0.237,      7,      8,  'NEXT',         0.09),
+    #engine(0.1,                         320,    44000,      0,      1,  'AJ10',         0.10),
+    #engine(0.25,                        470,    66000,      0,      1,  'RL10',         0.10),
+    #engine(2.2,                         950,    80000,      0,      1,  'BNTR',         0.10),
+    #engine(0.05,                        4170,   0.237,      7,      8,  'NEXT',         0.09),
     engine(0.25,                        9620,   0.67,       39.3,   4,  'HiPEP',        0.09),
     engine(0.5,                         2900,   1.7,        50,     2,  'AEPS',         0.09),
     engine(0.8,                         19300,  2.5,        250,    1,  'DS4G',         0.09),
     engine(0.6,                         2650,   5.4,        100,    1,  'X3',           0.09),
     engine(vasimr_weight(120, 1.1),     5000,   vt_ar(120), 120,    1,  'MPD$_{Ar}$',   0.05),
-    engine(vasimr_weight(120, 1.1),     2500,   vt_ar(120), 120,    1,  'MPD$_{Kr}$',   0.05),
-    engine(2.8,                         10141,  20.1,       0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
+    engine(vasimr_weight(120, 1.1),     2500,   vt_kr(120), 120,    1,  'MPD$_{Kr}$',   0.05),
+    #engine(2.8,                         10141,  20.1,       0,      1,  'DFD') #uses 2000kWe, but weight includes reactor
     ]
 
 
@@ -201,8 +207,8 @@ plt.xlabel('delta-v (ms$^{-1}$)')
 plt.title('Plot of mass / delta-v vs delta-v')
 plt.show()
 
-x0, xl = 4, 11
-y0, yl = 100, 600
+x0, xl = 3, 9.5
+y0, yl = 150, 550
 dv = 17000
 for engine in deepcopy(engine_list): #copy by value, not reference
     if (engine.label != "MPD$_{Ar}$") and (engine.label != "MPD$_{Kr}$"):
@@ -255,4 +261,5 @@ plt.ylim(y0, yl)
 plt.xlim(x0, xl)
 plt.legend()
 plt.tight_layout()
+#plt.savefig("ElecEngine.png", dpi=300)
 plt.show()
